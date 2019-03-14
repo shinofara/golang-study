@@ -39,7 +39,7 @@ func TestRun(t *testing.T) {
 		{
 			"in 99 out Fizz",
 			args{n: 99},
-			"FizzBuzz",
+			"Fizz",
 		},
 		{
 			"in 100 out Buzz",

@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"encoding/json"
 	"reflect"
+	"fmt"
 )
 
 func Test_indexHandler(t *testing.T) {
@@ -149,15 +150,15 @@ func Test_jsonHandler(t *testing.T) {
 	}
 }
 
+
 func Test_fizzBuzzHandler(t *testing.T) {
 	ts := httptest.NewServer( http.HandlerFunc( fizzBuzzHandler ) )
 	defer ts.Close()
 
 
 	type fizzbuzz struct {
-		value string
+		Value string `json:"value"`
 	}
-
 
 	type args struct {
 		n int
@@ -170,57 +171,55 @@ func Test_fizzBuzzHandler(t *testing.T) {
 		{
 			"in 1 out 1",
 			args{n: 1},
-			fizzbuzz{value: "1"},
+			fizzbuzz{Value: "1"},
 		},
 		{
 			"in 3 out Fizz",
 			args{n: 3},
-			fizzbuzz{value: "Fizz"},
+			fizzbuzz{Value: "Fizz"},
 		},
 		{
 			"in 5 out Buzz",
 			args{n: 5},
-			fizzbuzz{value: "Buzz"},
+			fizzbuzz{Value: "Buzz"},
 		},
 		{
 			"in 15 out FizzBuzz",
 			args{n: 15},
-			fizzbuzz{value: "FizzBuzz"},
+			fizzbuzz{Value: "FizzBuzz"},
 		},
 		{
 			"in 75 out FizzBuzz",
 			args{n: 75},
-			fizzbuzz{value: "1FizzBuzz"},
+			fizzbuzz{Value: "FizzBuzz"},
 		},
 		{
 			"in 99 out Fizz",
 			args{n: 99},
-			fizzbuzz{value: "Fizz"},
+			fizzbuzz{Value: "Fizz"},
 		},
 		{
 			"in 100 out Buzz",
 			args{n: 100},
-			fizzbuzz{value: "Buzz"},
+			fizzbuzz{Value: "Buzz"},
 		},
 		{
 			"in 101 out 101",
 			args{n: 101},
-			fizzbuzz{value: "101"},
+			fizzbuzz{Value: "101"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			 values := url.Values{}
-			values.Add("n", string(tt.args.n))
+			values := url.Values{}
+			values.Add("n", fmt.Sprint(tt.args.n))
 			res, err := http.Get( ts.URL + "?" + values.Encode())
 	        if err != nil {
                 t.Error("unexpected")
                 return
 	        }
 
-            if err := res.Body.Close(); err != nil {
-		        t.Fatal(err)
-	        }
+	        defer res.Body.Close()
 
             b, err := ioutil.ReadAll(res.Body)
 			if err != nil {
@@ -234,10 +233,6 @@ func Test_fizzBuzzHandler(t *testing.T) {
 
             if !reflect.DeepEqual(bb, tt.want) {
 	        	 t.Errorf("Response body error. body = %v", bb)
-	        }
-
-            if err := res.Body.Close(); err != nil {
-		        t.Fatal(err)
 	        }
 		})
 	}
