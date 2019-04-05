@@ -1,0 +1,31 @@
+version: "3.7"
+
+services:
+  app:
+    build:
+      context: .
+    ports:
+      - 8888:8888
+    volumes:
+      - .:/work
+    working_dir: /work
+    depends_on:
+      - db
+
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+    ports:
+      - 43306:3306
+    hostname: db
+
+  init:
+    image: mysql:5.7
+    volumes:
+      - ./db:/work
+    working_dir: /work
+    depends_on:
+      - db
+    command:
+      - ./init.sh
