@@ -27,7 +27,9 @@ func NewMux() http.Handler {
 	}
 	transaction := controller.TransactionController{Base: base}
 	index := controller.Index{Base: base}
+
 	r.HandleFunc("/", index.Index).Methods(http.MethodGet)
+
 	r.HandleFunc("/transactions", transaction.List).Methods(http.MethodGet)
 	r.HandleFunc("/transactions/{id:[0-9]+}", transaction.Show).Methods(http.MethodGet)
 	r.HandleFunc("/transactions", transaction.Create).Methods(http.MethodPost)

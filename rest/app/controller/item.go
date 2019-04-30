@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-
 	"github.com/shinofara/golang-study/rest/app/middleware"
+	"fmt"
 )
 
 // Transaction transaction entity.
@@ -63,6 +63,7 @@ func (t *TransactionController) Show(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	uID := r.Context().Value(middleware.UserIDKey).(int)
 	var transaction Transaction
+
 	if err := t.DB.Open().QueryRowContext(
 		ctx,
 		"select id, user_id, amount, description from transactions where id=? and user_id=?",
@@ -103,6 +104,41 @@ func (t *TransactionController) Create(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	uID := r.Context().Value(middleware.UserIDKey).(int)
+
+	// total作成
+	rows, err := t.DB.Open().QueryContext(
+		ctx,
+		"select id, user_id, amount, description from transactions where user_id=?",
+		uID,
+	)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Println(err)
+		}
+	}()
+
+	total := 0
+	//list := make([]Transaction, 0)
+	for rows.Next() {
+		var t Transaction
+		if err := rows.Scan(&t.ID, &t.UserID, &t.Amount, &t.Description); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		total = total + t.Amount
+	}
+
+	limit := uID * 1000
+	if total >= limit {
+		http.Error(w, fmt.Sprintf("limit:%d < total:%d", limit, total), http.StatusPaymentRequired)
+		return
+	}
+
 	result, err := t.DB.Open().ExecContext(
 		ctx,
 		"insert into transactions (user_id, amount, description) values (?,?,?)",

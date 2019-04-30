@@ -12,5 +12,4 @@ type Index struct {
 
 func (t *Index) Index(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Hello World")
-	return
 }
